@@ -1,0 +1,38 @@
+---
+description: Reglas para componentes React y custom hooks en la capa de presentación
+globs: src/presentation/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Reglas para Componentes React y Presentation Layer
+
+## Separación de Responsabilidades en UI
+
+1. **Prohibición Directa de Infraestructura**:
+   - Los componentes React (`.tsx`) y views NUNCA deben importar `axios`, ejecutar `fetch` directamente, parsear JWTs ni manipular `localStorage`/`sessionStorage`.
+   - Toda interacción con la API y persistencia debe estar encapsulada en la capa `infrastructure` y consumida a través de use cases en `application`.
+
+2. **Custom Hooks como Adaptadores Finos**:
+   - Los hooks en `src/presentation/hooks/` actúan exclusivamente como adaptadores entre la vista React y la capa `application/`.
+   - El hook gestiona la suscripción al estado, invoca el caso de uso y expone a la vista una interfaz limpia con estado explícito y métodos handlers.
+
+3. **Manejo Obligatorio de Estados UI**:
+   - Toda pantalla o componente que consuma datos asíncronos o ejecute operaciones mutables DEBE gestionar y presentar explícitamente los 4 estados principales:
+     - **`loading`**: Indicador visual (spinner, skeleton) o deshabilitación de controles durante la carga/submit.
+     - **`error`**: Presentación clara de mensajes de error de API (`ApiError`) y mapeo de errores de validación de formulario (`errors[]`) a los campos correspondientes.
+     - **`empty`**: Vista o mensaje informativo amigable cuando una colección o lista devuelva 0 elementos (ej. sin cuentas creadas o historial vacío).
+     - **`success`**: Renderizado de datos obtenidos o feedback de confirmación tras mutación exitosa.
+
+4. **Delimitación Estricta de Estados**:
+   - **Estado Local de Componente**: Formularios, toggles visuales, tabs activas, modals abierto/cerrado (`useState`, `useReducer`).
+   - **Estado Global de Sesión**: Datos de autenticación activa (`AuthSession`: `token`, `user`) accesible mediante Context/Provider.
+   - **Estado Remoto / Servidor**: Cuentas, balances e historial de transacciones gestionados mediante casos de uso, repositorios o store/cache de aplicación. No duplicar innecesariamente estado remoto en estado local mutable.
+
+5. **Formularios y Validaciones**:
+   - Los formularios deben validar la entrada en el cliente utilizando los mismos esquemas Zod documentados en [docs/frontend/frontend-validation.md](file:///d:/Codigo/DevSeniorAI/CleanArchitecture/CleanArchitecture-G1-fintech-core-front/docs/frontend/frontend-validation.md).
+   - Mapear la propiedad `field` de los errores `VALIDATION_ERROR` del backend directamente a los nombres de campo del formulario.
+
+## Documentos de Referencia
+- [frontend-architecture.md](file:///d:/Codigo/DevSeniorAI/CleanArchitecture/CleanArchitecture-G1-fintech-core-front/docs/frontend/frontend-architecture.md)
+- [frontend-state.md](file:///d:/Codigo/DevSeniorAI/CleanArchitecture/CleanArchitecture-G1-fintech-core-front/docs/frontend/frontend-state.md)
+- [frontend-validation.md](file:///d:/Codigo/DevSeniorAI/CleanArchitecture/CleanArchitecture-G1-fintech-core-front/docs/frontend/frontend-validation.md)

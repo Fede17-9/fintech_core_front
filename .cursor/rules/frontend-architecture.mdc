@@ -1,0 +1,57 @@
+---
+description: Reglas de Arquitectura Limpia, separación de capas y contratos de API para el frontend
+globs: 
+alwaysApply: true
+---
+
+# Arquitectura Limpia y Contrato de API (Frontend)
+
+## Principios Globales de Arquitectura
+
+1. **Clean Architecture Estricta**:
+   - El código debe organizarse en 4 capas conceptuales con dependencias unidireccionales:
+     ```
+     presentation → application → domain ← infrastructure
+     ```
+   - **`domain`**: Entidades de negocio client-side, interfaces de repositorios, tipos de error. Cero dependencias externas.
+   - **`application`**: Casos de uso de cliente (flujos de usuario puros). No conoce React ni HTTP crudo.
+   - **`infrastructure`**: Implementaciones concretas de repositorios, `ApiClient`, mappers DTO $\leftrightarrow$ Entidad, `TokenStorage`, esquemas Zod.
+   - **`presentation`**: UI en React (páginas, componentes, custom hooks adaptadores, rutas).
+
+2. **Inyección de Dependencias y Composición**:
+   - Los repositorios y casos de uso deben ser instanciados en un Composition Root (ej. `di.ts` o contenedor de dependencias).
+   - Los componentes UI y hooks nunca instancian clientes HTTP o repositorios concretos directamente; consumen los casos de uso inyectados o provistos vía Context/Container.
+
+3. **Fidelidad Absoluta al Contrato Backend**:
+   - Todos los endpoints, métodos HTTP, DTOs y estructuras de respuesta deben ser un espejo estricto de [docs/frontend/backend-contract.md](file:///d:/Codigo/DevSeniorAI/CleanArchitecture/CleanArchitecture-G1-fintech-core-front/docs/frontend/backend-contract.md).
+   - **Prohibición**: Queda estrictamente prohibido inventar endpoints, propiedades no retornadas por el backend, códigos HTTP no documentados o flujos hipotéticos (ej. logout en servidor, refresh tokens, edición de perfil).
+
+4. **Manejo del Envelope HTTP Backend**:
+   - Todas las respuestas del backend siguen el envelope:
+     - Éxito: `{ status: "success", data: T, message?: string }`
+     - Error: `{ status: "fail" | "error", code: string, message: string, errors?: { field: string, message: string }[] }`
+   - La capa `infrastructure/http` debe desempaquetar este envelope y normalizar errores a `ApiError`.
+
+5. **Códigos de Error Globales del Backend**:
+   - `VALIDATION_ERROR` (400): Error de validación Zod con array `errors`.
+   - `INSUFFICIENT_FUNDS` (400): Saldo insuficiente para retiro o transferencia.
+   - `DOMAIN_VALIDATION_ERROR` (400): Reglas de dominio (monto ≤ 0, cuenta congelada, cuentas origen=destino, etc.).
+   - `UNAUTHORIZED` (401) / `INVALID_TOKEN` (401): Token ausente, expirado o inválido.
+   - `ACCOUNT_NOT_FOUND` (404): Cuenta inexistente.
+   - `RESOURCE_NOT_FOUND` (404): Registro no encontrado.
+   - `DUPLICATE_FIELD` (409): Conflicto único en BD.
+   - `INTERNAL_SERVER_ERROR` (500): Error no controlado del servidor.
+
+6. **Manejo de Elementos [PENDIENTE]**:
+   - Las siguientes afirmaciones del backend están marcadas como `[PENDIENTE]` y no deben forzarse como reglas restrictivas hasta ser aclaradas:
+     - `initialBalance` en creación de cuenta (el controller backend actual lo ignora).
+     - Serialización JSON exacta de `balance` (`Decimal` a string vs number).
+     - Persistencia de `description` personalizada en `POST /api/transactions/transfer`.
+     - Auto-login tras registro (el backend responde 201 sin token).
+
+## Documentos de Referencia
+- [backend-contract.md](file:///d:/Codigo/DevSeniorAI/CleanArchitecture/CleanArchitecture-G1-fintech-core-front/docs/frontend/backend-contract.md)
+- [frontend-architecture.md](file:///d:/Codigo/DevSeniorAI/CleanArchitecture/CleanArchitecture-G1-fintech-core-front/docs/frontend/frontend-architecture.md)
+- [frontend-state.md](file:///d:/Codigo/DevSeniorAI/CleanArchitecture/CleanArchitecture-G1-fintech-core-front/docs/frontend/frontend-state.md)
+- [frontend-workflows.md](file:///d:/Codigo/DevSeniorAI/CleanArchitecture/CleanArchitecture-G1-fintech-core-front/docs/frontend/frontend-workflows.md)
+- [frontend-validation.md](file:///d:/Codigo/DevSeniorAI/CleanArchitecture/CleanArchitecture-G1-fintech-core-front/docs/frontend/frontend-validation.md)

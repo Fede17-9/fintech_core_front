@@ -1,0 +1,46 @@
+---
+description: Reglas para dominio, casos de uso (application) e infraestructura (repositorios, client HTTP, mappers)
+globs: src/{domain,application,infrastructure}/**/*.ts
+alwaysApply: false
+---
+
+# Reglas para Servicios, Casos de Uso e Infraestructura
+
+## Reglas de Independencia y TypeScript Estricto
+
+1. **Aislamiento Total de React**:
+   - Los archivos en `src/domain/`, `src/application/` y `src/infrastructure/` NO DEBEN importar nada proveniente de `react` o `react-dom` (ej. `useState`, `useEffect`, `ReactNode`, etc.).
+   - La lógica de aplicación y los casos de uso deben ser funciones o clases puras de TypeScript, completamente probables de forma independiente a la UI.
+
+2. **TypeScript Estricto e Inviolable**:
+   - Queda **prohibido el uso del tipo `any`**.
+   - Toda variable, parámetro, retorno de función y respuesta debe estar explícitamente tipada con interfaces, tipos TypeScript o genéricos restringidos.
+   - En caso excepcional de requerir flexibilidad, usar `unknown` combinado con funciones type guard o aserciones Zod.
+
+3. **ApiClient e Infraestructura HTTP**:
+   - El cliente HTTP (`ApiClient`) debe encapsular Axios o Fetch.
+   - Debe configurar la URL base a través de variables de entorno (ej. `VITE_API_URL` o `http://localhost:3000`).
+   - Debe inyectar automáticamente el encabezado `Authorization: Bearer <token>` desde `TokenStorage` en peticiones a rutas protegidas.
+   - Debe extraer el payload `data` en respuestas exitosas (`{ status: "success", data }`).
+   - Debe transformar las respuestas de error en instancias tipadas de `ApiError` extrayendo `code`, `message` y `errors` (array de `{ field, message }`).
+
+4. **Replicación de Esquemas de Validación Zod**:
+   - Los esquemas Zod en cliente deben ser un espejo exacto de los DTOs de presentación backend documentados en [docs/frontend/frontend-validation.md](file:///d:/Codigo/DevSeniorAI/CleanArchitecture/CleanArchitecture-G1-fintech-core-front/docs/frontend/frontend-validation.md):
+     - `RegisterUserSchema`: `name` (3-100 chars), `email` (formato email), `password` (min 8 chars).
+     - `LoginSchema`: `email` (formato email), `password` (min 1 char).
+     - `TransferMoneySchema`: `sourceAccountId` (UUID), `destinationAccountId` (UUID), `amount` (number > 0), `description` (optional, max 100).
+     - `DepositMoneySchema`: `accountId` (UUID), `amount` (number > 0).
+     - `WithdrawalMoneySchema`: `accountId` (UUID), `amount` (number > 0).
+
+5. **Prohibición de Replicar Reglas FinancierasComplejas**:
+   - El frontend NO debe implementar lógica de verificación de saldo suficiente o estado de congelamiento mediante cálculos en cliente antes de la petición HTTP.
+   - El frontend debe validar formato con Zod (borde) y enviar la petición; el backend ejecutará las validaciones financieras e informará errores (`INSUFFICIENT_FUNDS`, `DOMAIN_VALIDATION_ERROR`, etc.) que el frontend capturará y presentará en la UI.
+
+6. **Mappers DTO $\leftrightarrow$ Entidad**:
+   - Ninguna entidad de dominio client-side debe depender de la estructura cruda del JSON HTTP.
+   - Crear mappers explícitos (`AuthMapper`, `AccountMapper`, `TransactionMapper`) para convertir respuestas del servidor (`AccountOutputDTO`, `TransactionHistoryItemDTO`) en entidades limpias de dominio.
+
+## Documentos de Referencia
+- [backend-contract.md](file:///d:/Codigo/DevSeniorAI/CleanArchitecture/CleanArchitecture-G1-fintech-core-front/docs/frontend/backend-contract.md)
+- [frontend-architecture.md](file:///d:/Codigo/DevSeniorAI/CleanArchitecture/CleanArchitecture-G1-fintech-core-front/docs/frontend/frontend-architecture.md)
+- [frontend-validation.md](file:///d:/Codigo/DevSeniorAI/CleanArchitecture/CleanArchitecture-G1-fintech-core-front/docs/frontend/frontend-validation.md)
