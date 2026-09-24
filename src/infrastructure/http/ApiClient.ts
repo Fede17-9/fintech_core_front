@@ -65,8 +65,8 @@ class ApiClient {
 
   public async get<T>(url: string): Promise<T> {
     try {
-      const response = await this.client.get<ApiSuccessEnvelope<T>>(url);
-      return response.data.data;
+      const response = await this.client.get<ApiSuccessEnvelope<T> | T>(url);
+      return this.unwrap(response.data);
     } catch (error) {
       throw this.normalizeError(error);
     }
@@ -74,8 +74,8 @@ class ApiClient {
 
   public async post<T, D = unknown>(url: string, data?: D): Promise<T> {
     try {
-      const response = await this.client.post<ApiSuccessEnvelope<T>>(url, data);
-      return response.data.data;
+      const response = await this.client.post<ApiSuccessEnvelope<T> | T>(url, data);
+      return this.unwrap(response.data);
     } catch (error) {
       throw this.normalizeError(error);
     }
@@ -83,11 +83,25 @@ class ApiClient {
 
   public async patch<T, D = unknown>(url: string, data?: D): Promise<T> {
     try {
-      const response = await this.client.patch<ApiSuccessEnvelope<T>>(url, data);
-      return response.data.data;
+      const response = await this.client.patch<ApiSuccessEnvelope<T> | T>(url, data);
+      return this.unwrap(response.data);
     } catch (error) {
       throw this.normalizeError(error);
     }
+  }
+
+  private unwrap<T>(payload: ApiSuccessEnvelope<T> | T): T {
+    if (
+      payload !== null &&
+      typeof payload === 'object' &&
+      'status' in payload &&
+      payload.status === 'success' &&
+      'data' in payload
+    ) {
+      return payload.data as T;
+    }
+
+    return payload as T;
   }
 
   private normalizeError(error: unknown): ApiError {
@@ -106,7 +120,7 @@ class ApiClient {
       }
 
       return new ApiError(
-        axiosError.message || 'Error de conexión con el servidor',
+        responseData?.message || axiosError.message || 'Error de conexión con el servidor',
         status,
         'HTTP_ERROR'
       );
