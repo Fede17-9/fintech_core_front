@@ -17,6 +17,31 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const sessionFromToken = (token: string): AuthSession | null => {
+  try {
+    const encodedPayload = token.split('.')[1];
+    if (!encodedPayload) return null;
+
+    const normalizedPayload = encodedPayload.replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(normalizedPayload)) as { sub?: unknown; email?: unknown };
+
+    if (typeof payload.sub !== 'string' || typeof payload.email !== 'string') {
+      return null;
+    }
+
+    return {
+      token,
+      user: {
+        id: payload.sub,
+        name: payload.email,
+        email: payload.email,
+      },
+    };
+  } catch {
+    return null;
+  }
+};
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [session, setSessionState] = useState<AuthSession | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
@@ -32,8 +57,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Restauración inicial de sesión
     const token = TokenStorage.getToken();
     if (token) {
-      // Como el backend no tiene GET /me, inicializamos sesión con el token persistido
-      setStatus('authenticated');
+      const restoredSession = sessionFromToken(token);
+      if (restoredSession) {
+        setSessionState(restoredSession);
+        setStatus('authenticated');
+      } else {
+        // El backend será quien confirme o invalide tokens no decodificables.
+        setStatus('authenticated');
+      }
     } else {
       setStatus('anonymous');
     }
