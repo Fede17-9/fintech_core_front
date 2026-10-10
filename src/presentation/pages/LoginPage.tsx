@@ -6,6 +6,7 @@ import { ErrorAlert } from '../components/common/ErrorAlert';
 import { useNavigate, Link } from 'react-router-dom';
 import { LoginSchema } from '../../infrastructure/validation/AuthSchemas';
 import { FieldError } from '../../domain/errors/ApiError';
+import { AuthLayout } from '../components/layout/AuthLayout';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -59,13 +60,14 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="page-card">
-      <h2>Iniciar Sesión</h2>
+    <AuthLayout title="Iniciar Sesión" description="Ingresa tus datos para consultar tus cuentas y movimientos.">
       <ErrorAlert error={generalError} />
       <form onSubmit={handleSubmit} noValidate>
         <Input
           label="Correo Electrónico"
           type="email"
+          autoComplete="email"
+          placeholder="tu@correo.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           error={fieldErrors['email']}
@@ -75,6 +77,8 @@ export const LoginPage: React.FC = () => {
         <Input
           label="Contraseña"
           type="password"
+          autoComplete="current-password"
+          placeholder="Ingresa tu contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           error={fieldErrors['password']}
@@ -85,9 +89,9 @@ export const LoginPage: React.FC = () => {
           Ingresar
         </Button>
       </form>
-      <p style={{ marginTop: '1rem' }}>
+      <p className="auth-switch">
         ¿No tienes cuenta? <Link to="/register">Regístrate aquí</Link>
       </p>
-    </div>
+    </AuthLayout>
   );
 };

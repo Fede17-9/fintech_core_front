@@ -6,6 +6,7 @@ import { ErrorAlert } from '../components/common/ErrorAlert';
 import { useNavigate, Link } from 'react-router-dom';
 import { RegisterUserSchema } from '../../infrastructure/validation/AuthSchemas';
 import { FieldError } from '../../domain/errors/ApiError';
+import { AuthLayout } from '../components/layout/AuthLayout';
 
 export const RegisterPage: React.FC = () => {
   const { register } = useAuth();
@@ -65,14 +66,15 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="page-card">
-      <h2>Registro de Usuario</h2>
+    <AuthLayout title="Registro de Usuario" description="Crea tu usuario y comienza a organizar tus cuentas.">
       {successMessage && <div className="alert alert-success">{successMessage}</div>}
       <ErrorAlert error={generalError} />
       <form onSubmit={handleSubmit} noValidate>
         <Input
           label="Nombre Completo"
           type="text"
+          autoComplete="name"
+          placeholder="Tu nombre completo"
           value={name}
           onChange={(e) => setName(e.target.value)}
           error={fieldErrors['name']}
@@ -82,6 +84,8 @@ export const RegisterPage: React.FC = () => {
         <Input
           label="Correo Electrónico"
           type="email"
+          autoComplete="email"
+          placeholder="tu@correo.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           error={fieldErrors['email']}
@@ -91,6 +95,8 @@ export const RegisterPage: React.FC = () => {
         <Input
           label="Contraseña"
           type="password"
+          autoComplete="new-password"
+          placeholder="Mínimo 8 caracteres"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           error={fieldErrors['password']}
@@ -101,9 +107,9 @@ export const RegisterPage: React.FC = () => {
           Registrarse
         </Button>
       </form>
-      <p style={{ marginTop: '1rem' }}>
+      <p className="auth-switch">
         ¿Ya tienes cuenta? <Link to="/login">Inicia sesión aquí</Link>
       </p>
-    </div>
+    </AuthLayout>
   );
 };

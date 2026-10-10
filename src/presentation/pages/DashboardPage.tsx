@@ -113,6 +113,7 @@ export const DashboardPage: React.FC = () => {
     <div className="dashboard-container">
       <div className="dashboard-header">
         <div>
+          <span className="eyebrow">RESUMEN DE TUS FINANZAS</span>
           <h2>Panel Principal</h2>
           <p className="subtitle">
             Bienvenido, <strong>{session?.user?.name || session?.user?.email}</strong>
@@ -185,6 +186,7 @@ export const DashboardPage: React.FC = () => {
 
           <div className="section-header">
             <h3>Tus Cuentas Bancarias</h3>
+            <p className="subtitle">Selecciona una cuenta para consultar sus detalles y movimientos.</p>
           </div>
 
           <AccountList
